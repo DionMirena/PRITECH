@@ -117,10 +117,12 @@
 
                 <div class="comment-scroll" data-comment-list></div>
 
-                <div class="text-center mt-2">
-                    <button type="button" class="btn btn-outline-secondary btn-sm d-none" data-comment-more>
-                        <i class="bi bi-arrow-down-circle"></i> Load more
-                    </button>
+                <div class="comment-loader d-none text-center text-muted small mt-2" data-comment-loader>
+                    <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                    Loading more comments…
+                </div>
+                <div class="text-center text-muted small mt-2 d-none" data-comment-end>
+                    <i class="bi bi-check2-circle"></i> No more comments.
                 </div>
             </div>
         </div>

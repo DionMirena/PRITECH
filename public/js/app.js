@@ -176,18 +176,21 @@
 
         const issueId  = root.dataset.issueId;
         const listEl   = root.querySelector('[data-comment-list]');
-        const moreBtn  = root.querySelector('[data-comment-more]');
+        const loaderEl = root.querySelector('[data-comment-loader]');
+        const endEl    = root.querySelector('[data-comment-end]');
         const form     = root.querySelector('[data-comment-form]');
         const errBox   = root.querySelector('[data-comment-errors]');
         const counter  = root.querySelector('[data-comment-counter]');
 
-        let nextPage = 1;
-        let loading  = false;
+        let nextPage    = 1;
+        let hasMore     = true;
+        let loading     = false;
+        let pendingLoad = null;
 
         async function loadPage() {
-            if (loading) return;
+            if (loading || !hasMore) return;
             loading = true;
-            moreBtn.disabled = true;
+            loaderEl.classList.remove('d-none');
             try {
                 const data = await api(`/issues/${issueId}/comments?page=${nextPage}`);
                 data.comments.forEach(c => {
@@ -198,19 +201,35 @@
                 counter.textContent = data.meta.total;
                 if (data.meta.has_more) {
                     nextPage = data.meta.next_page;
-                    moreBtn.classList.remove('d-none');
-                    moreBtn.disabled = false;
                 } else {
-                    moreBtn.classList.add('d-none');
+                    hasMore = false;
+                    endEl.classList.remove('d-none');
                 }
             } catch (_) {
-                moreBtn.disabled = false;
+                // leave hasMore as-is so a future scroll can retry
             } finally {
                 loading = false;
+                loaderEl.classList.add('d-none');
             }
         }
 
-        moreBtn.addEventListener('click', loadPage);
+        function isNearBottom() {
+            return listEl.scrollTop + listEl.clientHeight >= listEl.scrollHeight - 40;
+        }
+
+        function maybeQueueLoad() {
+            if (loading || !hasMore || pendingLoad) return;
+            if (!isNearBottom()) return;
+
+            loaderEl.classList.remove('d-none');
+            pendingLoad = setTimeout(() => {
+                pendingLoad = null;
+                loadPage();
+            }, 1000);
+        }
+
+        listEl.addEventListener('scroll', maybeQueueLoad);
+
         loadPage();
 
         form.addEventListener('submit', async (e) => {

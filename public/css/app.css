@@ -169,6 +169,11 @@ a.text-decoration-none:hover {
     background: #aab4c4;
 }
 
+.comment-loader,
+[data-comment-end] {
+    padding: 0.4rem 0;
+}
+
 .comment-author {
     font-weight: 600;
     color: var(--pt-primary);
