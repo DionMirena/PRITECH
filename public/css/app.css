@@ -11,6 +11,30 @@ body {
     color: #1f2d3d;
 }
 
+main.container {
+    background: #ffffff;
+    border: 1px solid #e3e7ee;
+    border-radius: 1rem;
+    box-shadow: 0 1px 3px rgba(13, 38, 76, 0.04);
+    padding: 1.5rem;
+    margin-top: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.text-end {
+    padding-right: 0.75rem;
+}
+
+td.text-end,
+th.text-end {
+    padding-right: 1rem;
+}
+
+.text-end .btn-group,
+.text-end .btn {
+    margin-left: 0.35rem;
+}
+
 .navbar-brand {
     letter-spacing: 0.4px;
 }
