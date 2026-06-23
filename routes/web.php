@@ -25,4 +25,6 @@ Route::prefix('issues/{issue}')->group(function () {
 
     Route::post('assignees', [IssueAssigneeController::class, 'store'])->name('issues.assignees.store');
     Route::delete('assignees/{user}', [IssueAssigneeController::class, 'destroy'])->name('issues.assignees.destroy');
+
+    Route::patch('status', [IssueController::class, 'patchStatus'])->name('issues.status.update');
 });

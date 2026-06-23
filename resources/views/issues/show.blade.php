@@ -21,12 +21,54 @@
             <a href="{{ route('projects.show', $issue->project) }}" class="text-decoration-none">{{ $issue->project->name }}</a>
         </div>
         <h1 class="h3 mb-1">{{ $issue->title }}</h1>
-        <div class="d-flex gap-2 align-items-center flex-wrap">
-            <span class="badge {{ $statusBadges[$issue->status][1] }}">{{ $statusBadges[$issue->status][0] }}</span>
-            <span class="badge {{ $priorityBadges[$issue->priority][1] }}">{{ $priorityBadges[$issue->priority][0] }}</span>
+        <div class="d-flex gap-2 align-items-center flex-wrap" data-issue-quick data-issue-id="{{ $issue->id }}">
+            <div class="dropdown">
+                <button type="button" class="badge {{ $statusBadges[$issue->status][1] }} dropdown-toggle border-0"
+                        data-bs-toggle="dropdown" aria-expanded="false"
+                        data-quick-trigger="status" data-current="{{ $issue->status }}">
+                    {{ $statusBadges[$issue->status][0] }}
+                </button>
+                <ul class="dropdown-menu shadow-sm">
+                    @foreach (\App\Models\Issue::STATUSES as $s)
+                        <li>
+                            <button type="button" class="dropdown-item d-flex align-items-center gap-2"
+                                    data-quick-set="status" data-value="{{ $s }}">
+                                <span class="badge {{ $statusBadges[$s][1] }}">{{ $statusBadges[$s][0] }}</span>
+                                @if ($issue->status === $s)
+                                    <i class="bi bi-check2 ms-auto text-success"></i>
+                                @endif
+                            </button>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+
+            <div class="dropdown">
+                <button type="button" class="badge {{ $priorityBadges[$issue->priority][1] }} dropdown-toggle border-0"
+                        data-bs-toggle="dropdown" aria-expanded="false"
+                        data-quick-trigger="priority" data-current="{{ $issue->priority }}">
+                    {{ $priorityBadges[$issue->priority][0] }}
+                </button>
+                <ul class="dropdown-menu shadow-sm">
+                    @foreach (\App\Models\Issue::PRIORITIES as $p)
+                        <li>
+                            <button type="button" class="dropdown-item d-flex align-items-center gap-2"
+                                    data-quick-set="priority" data-value="{{ $p }}">
+                                <span class="badge {{ $priorityBadges[$p][1] }}">{{ $priorityBadges[$p][0] }}</span>
+                                @if ($issue->priority === $p)
+                                    <i class="bi bi-check2 ms-auto text-success"></i>
+                                @endif
+                            </button>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+
             @if ($issue->due_date)
                 <span class="text-muted small"><i class="bi bi-calendar-event"></i> Due {{ $issue->due_date->format('M j, Y') }}</span>
             @endif
+
+            <span data-quick-feedback class="small"></span>
         </div>
     </div>
     <div class="btn-group">

@@ -247,6 +247,80 @@
         });
     }
 
+    // ------------------------- ISSUE: QUICK STATUS / PRIORITY -------------------------
+    function initIssueQuickEdit() {
+        const root = document.querySelector('[data-issue-quick]');
+        if (!root) return;
+
+        const issueId = root.dataset.issueId;
+
+        const statusClasses = {
+            open:        'bg-primary',
+            in_progress: 'bg-info text-dark',
+            closed:      'bg-success',
+        };
+        const statusLabels = {
+            open: 'Open', in_progress: 'In Progress', closed: 'Closed',
+        };
+        const priorityClasses = {
+            low: 'bg-secondary', medium: 'bg-warning text-dark', high: 'bg-danger',
+        };
+        const priorityLabels = {
+            low: 'Low', medium: 'Medium', high: 'High',
+        };
+
+        const feedback = root.querySelector('[data-quick-feedback]');
+
+        root.addEventListener('click', async (e) => {
+            const item = e.target.closest('[data-quick-set]');
+            if (!item) return;
+
+            const field = item.dataset.quickSet;
+            const value = item.dataset.value;
+            const trigger = root.querySelector(`[data-quick-trigger="${field}"]`);
+
+            if (trigger.dataset.current === value) return;
+
+            const original = {
+                className: trigger.className,
+                text: trigger.textContent.trim(),
+                value: trigger.dataset.current,
+            };
+
+            const classes = field === 'status' ? statusClasses : priorityClasses;
+            const labels  = field === 'status' ? statusLabels  : priorityLabels;
+
+            // Optimistic update
+            trigger.className = `badge ${classes[value]} dropdown-toggle border-0`;
+            trigger.textContent = labels[value];
+            trigger.dataset.current = value;
+
+            try {
+                await api(`/issues/${issueId}/status`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ [field]: value }),
+                });
+
+                // Update menu check marks
+                root.querySelectorAll(`[data-quick-set="${field}"]`).forEach(btn => {
+                    const check = btn.querySelector('.bi-check2');
+                    if (check) check.remove();
+                });
+                const newCheck = document.createElement('i');
+                newCheck.className = 'bi bi-check2 ms-auto text-success';
+                item.appendChild(newCheck);
+
+                showFeedback(feedback, `${field === 'status' ? 'Status' : 'Priority'} updated.`, 'success');
+            } catch (_) {
+                // Roll back
+                trigger.className = original.className;
+                trigger.textContent = original.text;
+                trigger.dataset.current = original.value;
+                showFeedback(feedback, 'Could not update — please retry.', 'danger');
+            }
+        });
+    }
+
     // ------------------------- ISSUES: SEARCH/FILTER -------------------------
     function initIssuesFilter() {
         const form = document.querySelector('[data-issues-filter]');
@@ -316,5 +390,6 @@
         initIssueAssignees();
         initComments();
         initIssuesFilter();
+        initIssueQuickEdit();
     });
 })();

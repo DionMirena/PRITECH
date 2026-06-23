@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreIssueRequest;
 use App\Http\Requests\UpdateIssueRequest;
+use App\Http\Requests\UpdateIssueStatusRequest;
 use App\Models\Issue;
 use App\Models\Project;
 use App\Models\Tag;
@@ -110,5 +111,18 @@ class IssueController extends Controller
         return redirect()
             ->route('projects.show', $projectId)
             ->with('status', 'Issue deleted.');
+    }
+
+    public function patchStatus(UpdateIssueStatusRequest $request, Issue $issue): JsonResponse
+    {
+        $issue->fill($request->validated())->save();
+
+        return response()->json([
+            'issue' => [
+                'id'       => $issue->id,
+                'status'   => $issue->status,
+                'priority' => $issue->priority,
+            ],
+        ]);
     }
 }

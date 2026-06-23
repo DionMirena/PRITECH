@@ -42,6 +42,23 @@ body {
     border: 1px solid transparent;
 }
 
+.badge.dropdown-toggle {
+    cursor: pointer;
+    padding-right: 1.4rem;
+    padding-left: 0.7rem;
+    position: relative;
+}
+
+.badge.dropdown-toggle::after {
+    margin-left: 0.45rem;
+    vertical-align: 0.1em;
+    border-top-color: currentColor;
+}
+
+.dropdown-menu .dropdown-item .badge {
+    pointer-events: none;
+}
+
 .tag-chip .btn-close {
     font-size: 0.55rem;
     margin-left: 0.25rem;
