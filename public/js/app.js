@@ -48,6 +48,24 @@
         const addBtn  = root.querySelector('[data-tag-add]');
         const feedback = root.querySelector('[data-tag-feedback]');
 
+        const placeholderText = select.querySelector('option[value=""]')?.textContent || '— Add a tag —';
+
+        const initialAttachedIds = Array.from(list.querySelectorAll('[data-tag-id]'))
+            .map(el => parseInt(el.dataset.tagId, 10));
+
+        const allTagOptions = new Map();
+        Array.from(list.querySelectorAll('[data-tag-id]')).forEach(chip => {
+            const id = parseInt(chip.dataset.tagId, 10);
+            const name = chip.textContent.trim().replace(/\s+/g, ' ');
+            allTagOptions.set(id, { id, name });
+        });
+        select.querySelectorAll('option').forEach(opt => {
+            const id = parseInt(opt.value, 10);
+            if (!Number.isNaN(id)) {
+                allTagOptions.set(id, { id, name: opt.textContent.trim() });
+            }
+        });
+
         function renderChip(tag) {
             const chip = document.createElement('span');
             chip.className = 'tag-chip me-1 mb-1';
@@ -59,16 +77,44 @@
                 ${escapeHtml(tag.name)}
                 <button type="button" class="btn-close" data-detach aria-label="Remove tag"></button>
             `;
+            if (!allTagOptions.has(tag.id)) {
+                allTagOptions.set(tag.id, { id: tag.id, name: tag.name });
+            }
             return chip;
+        }
+
+        function rerenderSelect(attachedIds) {
+            const attachedSet = new Set(attachedIds);
+            const previousValue = select.value;
+            select.innerHTML = '';
+            const placeholder = document.createElement('option');
+            placeholder.value = '';
+            placeholder.textContent = placeholderText;
+            select.appendChild(placeholder);
+
+            Array.from(allTagOptions.values())
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .filter(t => !attachedSet.has(t.id))
+                .forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t.id;
+                    opt.textContent = t.name;
+                    select.appendChild(opt);
+                });
+
+            if (previousValue && !attachedSet.has(parseInt(previousValue, 10))) {
+                select.value = previousValue;
+            }
         }
 
         function rerender(tags) {
             list.innerHTML = '';
             if (!tags.length) {
                 list.innerHTML = '<span class="text-muted small">No tags yet.</span>';
-                return;
+            } else {
+                tags.forEach(t => list.appendChild(renderChip(t)));
             }
-            tags.forEach(t => list.appendChild(renderChip(t)));
+            rerenderSelect(tags.map(t => t.id));
         }
 
         addBtn.addEventListener('click', async () => {
@@ -103,6 +149,8 @@
                 showFeedback(feedback, 'Could not detach tag.', 'danger');
             }
         });
+
+        rerenderSelect(initialAttachedIds.length ? initialAttachedIds : []);
     }
 
     function initIssueAssignees() {
@@ -115,6 +163,24 @@
         const addBtn   = root.querySelector('[data-assignee-add]');
         const feedback = root.querySelector('[data-assignee-feedback]');
 
+        const placeholderText = select.querySelector('option[value=""]')?.textContent || '— Assign member —';
+
+        const initialAttachedIds = Array.from(list.querySelectorAll('[data-user-id]'))
+            .map(el => parseInt(el.dataset.userId, 10));
+
+        const allUserOptions = new Map();
+        Array.from(list.querySelectorAll('[data-user-id]')).forEach(row => {
+            const id = parseInt(row.dataset.userId, 10);
+            const name = row.textContent.trim().replace(/\s+/g, ' ');
+            allUserOptions.set(id, { id, name });
+        });
+        select.querySelectorAll('option').forEach(opt => {
+            const id = parseInt(opt.value, 10);
+            if (!Number.isNaN(id)) {
+                allUserOptions.set(id, { id, name: opt.textContent.trim() });
+            }
+        });
+
         function renderRow(u) {
             const row = document.createElement('span');
             row.className = 'tag-chip me-1 mb-1';
@@ -124,16 +190,44 @@
                 ${escapeHtml(u.name)}
                 <button type="button" class="btn-close" data-detach aria-label="Remove"></button>
             `;
+            if (!allUserOptions.has(u.id)) {
+                allUserOptions.set(u.id, { id: u.id, name: u.name });
+            }
             return row;
+        }
+
+        function rerenderSelect(attachedIds) {
+            const attachedSet = new Set(attachedIds);
+            const previousValue = select.value;
+            select.innerHTML = '';
+            const placeholder = document.createElement('option');
+            placeholder.value = '';
+            placeholder.textContent = placeholderText;
+            select.appendChild(placeholder);
+
+            Array.from(allUserOptions.values())
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .filter(u => !attachedSet.has(u.id))
+                .forEach(u => {
+                    const opt = document.createElement('option');
+                    opt.value = u.id;
+                    opt.textContent = u.name;
+                    select.appendChild(opt);
+                });
+
+            if (previousValue && !attachedSet.has(parseInt(previousValue, 10))) {
+                select.value = previousValue;
+            }
         }
 
         function rerender(users) {
             list.innerHTML = '';
             if (!users.length) {
                 list.innerHTML = '<span class="text-muted small">Nobody assigned yet.</span>';
-                return;
+            } else {
+                users.forEach(u => list.appendChild(renderRow(u)));
             }
-            users.forEach(u => list.appendChild(renderRow(u)));
+            rerenderSelect(users.map(u => u.id));
         }
 
         addBtn.addEventListener('click', async () => {
@@ -168,6 +262,8 @@
                 showFeedback(feedback, 'Could not remove.', 'danger');
             }
         });
+
+        rerenderSelect(initialAttachedIds.length ? initialAttachedIds : []);
     }
 
     function initComments() {
