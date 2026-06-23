@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreCommentRequest;
+use App\Http\Requests\UpdateCommentRequest;
 use App\Models\Comment;
 use App\Models\Issue;
 use Illuminate\Http\JsonResponse;
@@ -38,5 +39,24 @@ class CommentController extends Controller
                 'html' => view('issues._comment', ['comment' => $comment])->render(),
             ],
         ], 201);
+    }
+
+    public function update(UpdateCommentRequest $request, Comment $comment): JsonResponse
+    {
+        $comment->update($request->validated());
+
+        return response()->json([
+            'comment' => [
+                'id'   => $comment->id,
+                'html' => view('issues._comment', ['comment' => $comment])->render(),
+            ],
+        ]);
+    }
+
+    public function destroy(Comment $comment): JsonResponse
+    {
+        $comment->delete();
+
+        return response()->json(['deleted' => true]);
     }
 }

@@ -327,6 +327,65 @@
 
         listEl.addEventListener('scroll', maybeQueueLoad);
 
+        listEl.addEventListener('click', async (e) => {
+            const comment = e.target.closest('.comment');
+            if (!comment) return;
+            const commentId = comment.dataset.commentId;
+
+            if (e.target.closest('[data-comment-edit]')) {
+                comment.querySelector('[data-comment-body]').classList.add('d-none');
+                comment.querySelector('[data-comment-edit-form]').classList.remove('d-none');
+                comment.querySelector('[data-comment-edit-body]').focus();
+                return;
+            }
+
+            if (e.target.closest('[data-comment-edit-cancel]')) {
+                comment.querySelector('[data-comment-body]').classList.remove('d-none');
+                comment.querySelector('[data-comment-edit-form]').classList.add('d-none');
+                comment.querySelector('[data-comment-edit-errors]').innerHTML = '';
+                return;
+            }
+
+            if (e.target.closest('[data-comment-edit-save]')) {
+                const errBox = comment.querySelector('[data-comment-edit-errors]');
+                errBox.innerHTML = '';
+                const payload = {
+                    author_name: comment.querySelector('[data-comment-edit-author]').value.trim(),
+                    body:        comment.querySelector('[data-comment-edit-body]').value.trim(),
+                };
+                try {
+                    const data = await api(`/comments/${commentId}`, {
+                        method: 'PATCH',
+                        body: JSON.stringify(payload),
+                    });
+                    const wrapper = document.createElement('div');
+                    wrapper.innerHTML = data.comment.html;
+                    comment.replaceWith(wrapper.firstElementChild);
+                } catch (err) {
+                    if (err.status === 422 && err.data && err.data.errors) {
+                        const lis = Object.values(err.data.errors).flat()
+                            .map(m => `<li>${escapeHtml(m)}</li>`).join('');
+                        errBox.innerHTML = `<div class="alert alert-danger py-1 px-2 mb-2 small"><ul class="mb-0">${lis}</ul></div>`;
+                    } else {
+                        errBox.innerHTML = `<div class="alert alert-danger py-1 px-2 mb-2 small">Could not save changes.</div>`;
+                    }
+                }
+                return;
+            }
+
+            if (e.target.closest('[data-comment-delete]')) {
+                if (!window.confirm('Delete this comment?')) return;
+                try {
+                    await api(`/comments/${commentId}`, { method: 'DELETE' });
+                    comment.remove();
+                    const current = parseInt(counter.textContent, 10) || 0;
+                    counter.textContent = Math.max(0, current - 1);
+                } catch (_) {
+                    /* leave the comment in place if the delete fails */
+                }
+            }
+        });
+
         loadPage();
 
         form.addEventListener('submit', async (e) => {

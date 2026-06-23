@@ -16,6 +16,9 @@ Route::resource('issues', IssueController::class);
 
 Route::resource('tags', TagController::class)->only(['index', 'store', 'destroy']);
 
+Route::patch ('comments/{comment}', [CommentController::class, 'update'])->name('comments.update');
+Route::delete('comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
+
 Route::prefix('issues/{issue}')->group(function () {
     Route::get('comments', [CommentController::class, 'index'])->name('issues.comments.index');
     Route::post('comments', [CommentController::class, 'store'])->name('issues.comments.store');

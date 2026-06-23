@@ -146,6 +146,23 @@ a.text-decoration-none:hover {
     margin-bottom: 0.75rem;
     background: #fafbfd;
     border-radius: 0 .5rem .5rem 0;
+    position: relative;
+}
+
+.comment-actions [data-comment-edit],
+.comment-actions [data-comment-delete] {
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.comment:hover .comment-actions [data-comment-edit],
+.comment:hover .comment-actions [data-comment-delete] {
+    opacity: 1;
+}
+
+.comment-actions .btn-link {
+    line-height: 1;
+    text-decoration: none;
 }
 
 .comment-scroll {
