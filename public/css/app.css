@@ -44,6 +44,25 @@ th.text-end {
     color: #2c3e50;
 }
 
+a.text-decoration-none {
+    color: inherit;
+    transition: color 0.12s ease;
+}
+
+a.text-decoration-none:hover {
+    color: var(--pt-primary);
+}
+
+.table a.fw-semibold,
+.card a.fw-semibold {
+    color: #1f2d3d;
+}
+
+.table a.fw-semibold:hover,
+.card a.fw-semibold:hover {
+    color: #000;
+}
+
 .navbar-brand {
     letter-spacing: 0.4px;
 }
