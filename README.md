@@ -41,40 +41,146 @@ two extra columns to the `projects` table — exactly as required by the task.
 
 ## Setup
 
+You can run PRITECH two ways. Pick whichever you have on your machine.
+
+---
+
 ### Option A — Docker (recommended, zero local dependencies)
 
-Requires Docker Desktop / Docker Engine + Compose v2.
+#### Prerequisites
+
+- **Docker Desktop** (Windows/macOS) or **Docker Engine + Compose v2** (Linux).
+  Verify with:
+  ```bash
+  docker --version
+  docker compose version
+  ```
+- Ports **8080** (web) and **3307** (MySQL) free on your host.
+
+#### Step 1 — Clone the repository
 
 ```bash
 git clone <repo>
 cd PRITECH
+```
+
+#### Step 2 — Build and start the stack
+
+```bash
 docker compose up -d --build
 ```
 
-Then visit `http://127.0.0.1:8080`.
+What this does:
 
-The first boot waits for MySQL, runs `php artisan migrate --force` and
-`db:seed --force`, then caches config/routes/views. Subsequent restarts
-re-run migrations (idempotent) but skip seeding (set `RUN_SEED=1` in
-`compose.yaml` if you want a fresh demo dataset).
+1. Builds the `pritech/app:latest` image from the `Dockerfile`:
+   - **Stage 1** (`vendor`) runs `composer install` to produce `vendor/`.
+   - **Stage 2** (`runtime`) is `php:8.3-fpm-alpine` with the required PHP
+     extensions (`pdo_mysql`, `bcmath`, `intl`, `opcache`, `zip`) plus a
+     custom `php.ini` and `opcache.ini`.
+2. Starts three containers wired together on a private Docker network:
 
-Services:
+   | Service | Container       | Image                | Host port |
+   |---------|-----------------|----------------------|-----------|
+   | nginx   | `pritech-web`   | `nginx:1.27-alpine`  | `8080`    |
+   | PHP-FPM | `pritech-app`   | `pritech/app:latest` | – (internal `9000`) |
+   | MySQL 8 | `pritech-db`    | `mysql:8.4`          | `3307` → container `3306` |
 
-| Service | Container       | Host port |
-|---------|-----------------|-----------|
-| nginx   | `pritech-web`   | `8080`    |
-| PHP-FPM | `pritech-app`   | -         |
-| MySQL 8 | `pritech-db`    | `3307` (mapped from container's 3306) |
+3. On first boot, `docker/entrypoint.sh` inside the app container:
+   - copies `.env.example` to `.env` if missing
+   - generates an `APP_KEY` if one isn't already set
+   - polls MySQL until it answers on port `3306`
+   - runs `php artisan migrate --force`
+   - runs `php artisan db:seed --force` (because `RUN_SEED=1` in
+     `compose.yaml`)
+   - caches config / routes / views
+   - launches `php-fpm`
 
-Useful commands:
+Total first-boot time: ~30–60 seconds while the DB warms up and the seeder
+runs. Watch progress with `docker compose logs -f app`.
+
+#### Step 3 — Open the app
+
+Visit **http://localhost:8080** in your browser.
+
+You should land on the projects index with the full seeded demo dataset:
+- **10 named developers** (Alice Carter, Bob Hernandez, Sarah Chen, …)
+- **7 projects** (Customer Portal Redesign, Mobile App v2, Public REST API, …)
+- **~50 realistic issues** + **~200 comments** + **10 colored tags**
+
+#### Step 4 — Verify everything is healthy
+
 ```bash
-docker compose logs -f app           # tail PHP logs
-docker compose exec app php artisan tinker
-docker compose exec app php artisan migrate:fresh --seed
-docker compose down -v               # wipe DB volume and start over
+docker compose ps
 ```
 
+You should see three containers, all `Up`, with `pritech-db` reporting
+`(healthy)`.
+
+---
+
+### Docker — day-to-day commands
+
+```bash
+# --- lifecycle ---
+docker compose up -d                 # start (uses existing images)
+docker compose up -d --build         # rebuild app image, then start
+docker compose stop                  # stop containers, keep volumes
+docker compose down                  # stop and remove containers
+docker compose down -v               # stop, remove containers AND wipe MySQL data
+docker compose restart               # restart all
+docker compose restart app           # restart just PHP
+
+# --- visibility ---
+docker compose ps                    # what's running
+docker compose logs -f               # tail all logs
+docker compose logs -f app           # tail just PHP
+docker compose logs -f web           # tail just nginx
+docker compose logs -f db            # tail just MySQL
+
+# --- run artisan inside the container ---
+docker compose exec app php artisan tinker
+docker compose exec app php artisan route:list
+docker compose exec app php artisan migrate:fresh --seed   # reset to fresh demo data
+docker compose exec app php artisan config:clear
+docker compose exec app sh                                  # interactive shell
+
+# --- talk to MySQL from your host ---
+mysql -h 127.0.0.1 -P 3307 -u pritech -psecret pritech
+```
+
+### When do you need to rebuild?
+
+| Changed file(s)                            | What to run                          |
+|--------------------------------------------|--------------------------------------|
+| `public/css/app.css`, `public/js/app.js`   | Just refresh the browser (bind-mounted) |
+| `resources/views/**`                       | Live — refresh the browser           |
+| `app/**`, `routes/**`, `database/**`, `composer.json` | `docker compose up -d --build`       |
+| `compose.yaml`                             | `docker compose up -d`               |
+| `Dockerfile`, `docker/**`                  | `docker compose up -d --build`       |
+
+### Troubleshooting
+
+- **Port already in use** — change `"8080:80"` (or `"3307:3306"`) in
+  `compose.yaml` to a free port and `docker compose up -d` again.
+- **`Connection refused` from app to db** — the entrypoint waits up to 30s.
+  If the DB is slow on your machine, run `docker compose restart app` once
+  the DB is up.
+- **Want to reset everything** — `docker compose down -v && docker compose up -d --build`
+  destroys the MySQL volume and re-seeds from scratch.
+- **Permission errors on `storage/`** — the image already chowns it to
+  `www-data`. If you mounted the host directory by mistake, remove that
+  mount from `compose.yaml`.
+
+---
+
 ### Option B — Run locally with Laragon / native PHP
+
+#### Prerequisites
+- PHP 8.3+
+- Composer
+- MySQL (Laragon ships it) or SQLite
+
+#### Steps
 
 ```bash
 git clone <repo>
