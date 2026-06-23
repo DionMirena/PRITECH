@@ -259,4 +259,5 @@ routes/web.php
 - Issue filters share one endpoint (`IssueController@index`) — when called with `XMLHttpRequest`, it returns rendered partials + pagination HTML; otherwise it returns the full page. This keeps the view template DRY.
 - All AJAX POST/DELETE requests use the CSRF token from the `<meta name="csrf-token">` tag.
 #   P R I T E C H  
+ #   P R I T E C H  
  
