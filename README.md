@@ -41,6 +41,41 @@ two extra columns to the `projects` table — exactly as required by the task.
 
 ## Setup
 
+### Option A — Docker (recommended, zero local dependencies)
+
+Requires Docker Desktop / Docker Engine + Compose v2.
+
+```bash
+git clone <repo>
+cd PRITECH
+docker compose up -d --build
+```
+
+Then visit `http://127.0.0.1:8080`.
+
+The first boot waits for MySQL, runs `php artisan migrate --force` and
+`db:seed --force`, then caches config/routes/views. Subsequent restarts
+re-run migrations (idempotent) but skip seeding (set `RUN_SEED=1` in
+`compose.yaml` if you want a fresh demo dataset).
+
+Services:
+
+| Service | Container       | Host port |
+|---------|-----------------|-----------|
+| nginx   | `pritech-web`   | `8080`    |
+| PHP-FPM | `pritech-app`   | -         |
+| MySQL 8 | `pritech-db`    | `3307` (mapped from container's 3306) |
+
+Useful commands:
+```bash
+docker compose logs -f app           # tail PHP logs
+docker compose exec app php artisan tinker
+docker compose exec app php artisan migrate:fresh --seed
+docker compose down -v               # wipe DB volume and start over
+```
+
+### Option B — Run locally with Laragon / native PHP
+
 ```bash
 git clone <repo>
 cd PRITECH
