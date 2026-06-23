@@ -404,7 +404,10 @@
                 });
                 const wrapper = document.createElement('div');
                 wrapper.innerHTML = data.comment.html;
-                listEl.insertBefore(wrapper.firstElementChild, listEl.firstChild);
+                const fresh = wrapper.firstElementChild;
+                fresh.classList.add('comment-new');
+                fresh.addEventListener('animationend', () => fresh.classList.remove('comment-new'), { once: true });
+                listEl.insertBefore(fresh, listEl.firstChild);
                 counter.textContent = (parseInt(counter.textContent, 10) || 0) + 1;
                 listEl.scrollTop = 0;
                 form.reset();
