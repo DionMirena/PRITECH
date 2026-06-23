@@ -100,7 +100,8 @@
                 </span>
             </div>
             <div class="card-body">
-                <form data-comment-form class="mb-3">
+                <form data-comment-form method="POST" action="{{ route('issues.comments.store', $issue) }}" class="mb-3">
+                    @csrf
                     <div data-comment-errors></div>
                     <div class="row g-2">
                         <div class="col-md-4">
