@@ -118,12 +118,12 @@
 
                 <div class="comment-scroll" data-comment-list></div>
 
-                <div class="comment-loader d-none text-center text-muted small mt-2" data-comment-loader>
-                    <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-                    Loading more comments…
+                <div class="comment-loader d-none text-center text-muted mt-3" data-comment-loader>
+                    <div class="spinner-border text-primary mb-2" role="status" aria-hidden="true"></div>
+                    <div class="small"><i class="bi bi-three-dots"></i> Loading more comments…</div>
                 </div>
-                <div class="text-center text-muted small mt-2 d-none" data-comment-end>
-                    <i class="bi bi-check2-circle"></i> No more comments.
+                <div class="text-center text-muted small mt-3 d-none" data-comment-end>
+                    <i class="bi bi-check2-circle text-success"></i> You've reached the end.
                 </div>
             </div>
         </div>

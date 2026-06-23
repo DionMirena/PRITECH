@@ -222,10 +222,11 @@
             if (!isNearBottom()) return;
 
             loaderEl.classList.remove('d-none');
+            const delay = 1200 + Math.random() * 1800;
             pendingLoad = setTimeout(() => {
                 pendingLoad = null;
                 loadPage();
-            }, 1000);
+            }, delay);
         }
 
         listEl.addEventListener('scroll', maybeQueueLoad);
