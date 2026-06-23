@@ -27,8 +27,13 @@ if [ "${RUN_MIGRATIONS:-1}" = "1" ]; then
     php artisan migrate --force
 
     if [ "${RUN_SEED:-0}" = "1" ]; then
-        echo "[entrypoint] seeding database"
-        php artisan db:seed --force
+        PROJECT_COUNT=$(php artisan tinker --execute='echo \App\Models\Project::count();' 2>/dev/null | tail -1 | tr -d '[:space:]')
+        if [ "${PROJECT_COUNT}" = "0" ]; then
+            echo "[entrypoint] database is empty, seeding"
+            php artisan db:seed --force
+        else
+            echo "[entrypoint] database already has ${PROJECT_COUNT} projects, skipping seed"
+        fi
     fi
 fi
 
