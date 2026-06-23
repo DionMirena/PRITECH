@@ -115,7 +115,7 @@
                     </div>
                 </form>
 
-                <div data-comment-list></div>
+                <div class="comment-scroll" data-comment-list></div>
 
                 <div class="text-center mt-2">
                     <button type="button" class="btn btn-outline-secondary btn-sm d-none" data-comment-more>

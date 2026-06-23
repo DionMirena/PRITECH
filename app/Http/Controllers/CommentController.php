@@ -11,7 +11,7 @@ class CommentController extends Controller
 {
     public function index(Issue $issue): JsonResponse
     {
-        $comments = $issue->comments()->paginate(5);
+        $comments = $issue->comments()->paginate(10);
 
         return response()->json([
             'comments' => $comments->getCollection()->map(fn (Comment $c) => [

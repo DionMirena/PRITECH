@@ -231,6 +231,7 @@
                 wrapper.innerHTML = data.comment.html;
                 listEl.insertBefore(wrapper.firstElementChild, listEl.firstChild);
                 counter.textContent = (parseInt(counter.textContent, 10) || 0) + 1;
+                listEl.scrollTop = 0;
                 form.reset();
             } catch (err) {
                 if (err.status === 422 && err.data && err.data.errors) {
