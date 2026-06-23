@@ -38,7 +38,6 @@
         };
     }
 
-    // ------------------------- ISSUE: TAGS -------------------------
     function initIssueTags() {
         const root = document.querySelector('[data-issue-tags]');
         if (!root) return;
@@ -106,7 +105,6 @@
         });
     }
 
-    // ------------------------- ISSUE: ASSIGNEES -------------------------
     function initIssueAssignees() {
         const root = document.querySelector('[data-issue-assignees]');
         if (!root) return;
@@ -172,7 +170,6 @@
         });
     }
 
-    // ------------------------- ISSUE: COMMENTS -------------------------
     function initComments() {
         const root = document.querySelector('[data-comments]');
         if (!root) return;
@@ -247,7 +244,6 @@
         });
     }
 
-    // ------------------------- ISSUE: QUICK STATUS / PRIORITY -------------------------
     function initIssueQuickEdit() {
         const root = document.querySelector('[data-issue-quick]');
         if (!root) return;
@@ -290,7 +286,6 @@
             const classes = field === 'status' ? statusClasses : priorityClasses;
             const labels  = field === 'status' ? statusLabels  : priorityLabels;
 
-            // Optimistic update
             trigger.className = `badge ${classes[value]} dropdown-toggle border-0`;
             trigger.textContent = labels[value];
             trigger.dataset.current = value;
@@ -301,7 +296,6 @@
                     body: JSON.stringify({ [field]: value }),
                 });
 
-                // Update menu check marks
                 root.querySelectorAll(`[data-quick-set="${field}"]`).forEach(btn => {
                     const check = btn.querySelector('.bi-check2');
                     if (check) check.remove();
@@ -312,7 +306,6 @@
 
                 showFeedback(feedback, `${field === 'status' ? 'Status' : 'Priority'} updated.`, 'success');
             } catch (_) {
-                // Roll back
                 trigger.className = original.className;
                 trigger.textContent = original.text;
                 trigger.dataset.current = original.value;
@@ -321,7 +314,6 @@
         });
     }
 
-    // ------------------------- ISSUES: SEARCH/FILTER -------------------------
     function initIssuesFilter() {
         const form = document.querySelector('[data-issues-filter]');
         if (!form) return;
@@ -363,7 +355,6 @@
         });
     }
 
-    // ------------------------- HELPERS -------------------------
     function showFeedback(el, message, type) {
         if (!el) return;
         el.innerHTML = `<div class="alert alert-${type} py-1 px-2 mb-0 small">${escapeHtml(message)}</div>`;
