@@ -42,7 +42,7 @@
         <div class="card h-100">
             <div class="card-body">
                 <div class="section-title">Overview</div>
-                <p class="mb-3">{{ $project->description ?: 'No description provided.' }}</p>
+                <p class="card-text-block mb-3">{{ $project->description ?: 'No description provided.' }}</p>
                 <div class="small">
                     <div><i class="bi bi-calendar-event text-muted"></i> Start: <strong>{{ $project->start_date?->format('M j, Y') ?? '—' }}</strong></div>
                     <div><i class="bi bi-calendar-x text-muted"></i> Deadline: <strong>{{ $project->deadline?->format('M j, Y') ?? '—' }}</strong></div>

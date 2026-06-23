@@ -86,9 +86,9 @@
             <div class="card-header">Description</div>
             <div class="card-body">
                 @if ($issue->description)
-                    {!! nl2br(e($issue->description)) !!}
+                    <p class="card-text-block">{!! nl2br(e($issue->description)) !!}</p>
                 @else
-                    <span class="text-muted">No description provided.</span>
+                    <p class="card-text-block text-muted mb-0">No description provided.</p>
                 @endif
             </div>
         </div>

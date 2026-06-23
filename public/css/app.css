@@ -35,6 +35,15 @@ th.text-end {
     margin-left: 0.35rem;
 }
 
+.card-text-block {
+    border: 1px solid #e3e7ee;
+    border-radius: 0.5rem;
+    background: #fafbfd;
+    padding: 0.85rem 1rem;
+    line-height: 1.55;
+    color: #2c3e50;
+}
+
 .navbar-brand {
     letter-spacing: 0.4px;
 }
