@@ -1,181 +1,223 @@
-# PRITECH – Mini Issue Tracker
+<div align="center">
 
-A small team issue tracker built with **Laravel 13**, demonstrating clean Eloquent
+# PRITECH
+
+### Mini Issue Tracker
+
+A small-team issue tracker built with Laravel 13, demonstrating clean Eloquent
 relationships, Form Request validation, resource controllers, Blade with
-partials, and AJAX-driven interactions for tags, comments, assignees and
-filtering.
+partials, and AJAX interactions for tags, comments, assignees and filtering.
 
-This repository was produced as a technical task: see
-[`docs/TASK.md`](docs/TASK.md) for the original brief.
+![Laravel](https://img.shields.io/badge/Laravel-13.x-FF2D20?logo=laravel&logoColor=white)
+![PHP](https://img.shields.io/badge/PHP-8.3-777BB4?logo=php&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-8.4-4479A1?logo=mysql&logoColor=white)
+![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+
+[Quick start](#quick-start) ·
+[Features](#features) ·
+[Architecture](#architecture) ·
+[Routes](#routes) ·
+[Docker](#option-a--docker-recommended) ·
+[Local PHP](#option-b--local-php--laragon)
+
+</div>
 
 ---
 
-## Domain
+## Quick start
 
-| Entity   | Notes |
-|----------|-------|
-| Project  | `name`, `description`, plus `start_date` and `deadline` added in a follow-up migration. Has many Issues. |
-| Issue    | `title`, `description`, `status` (`open / in_progress / closed`), `priority` (`low / medium / high`), `due_date`. Belongs to Project, has many Comments, many-to-many with Tags and (bonus) Users. |
-| Tag      | `name` (unique) + optional `color`. Many-to-many with Issues. |
-| Comment  | `author_name`, `body`. Belongs to Issue. |
+```bash
+git clone https://github.com/DionMirena/PRITECH.git
+cd PRITECH
+docker compose up -d --build
+```
 
-A separate migration `add_start_date_and_deadline_to_projects_table` adds the
-two extra columns to the `projects` table — exactly as required by the task.
+Open **http://localhost:8080**. First boot takes ~30–60 seconds while MySQL
+warms up and the seeder loads ~50 demo issues across 7 projects.
+
+---
 
 ## Features
 
-- **Projects** — list, create, edit, delete, show with associated issues.
-- **Issues** — list with **AJAX-debounced** search and filtering by status, priority and tag. Full CRUD with Form Request validation.
-- **Tags** — create unique tags with a color; attach/detach to issues over **AJAX**, with no page reload.
-- **Comments** — paginated AJAX load (5 per page) on the issue page, AJAX submit that prepends the new comment and clears the form. Server-side validation errors are surfaced inline on the page.
-- **Assignees (bonus)** — many-to-many `issue_user` pivot, attached/detached via AJAX on the issue page.
-- **Authorization (bonus)** — `ProjectPolicy` lets only a project's owner edit or delete it.
-- **Search (bonus)** — debounced text search on issue title/description with AJAX result swap and URL state.
-
-## Tech
-
-- Laravel 13.x (PHP 8.3)
-- MySQL (configured for Laragon by default; SQLite works just as well)
-- Bootstrap 5 + Bootstrap Icons via CDN — no JS build step needed
-- Vanilla ES, no jQuery dependency
-
-## Setup
-
-You can run PRITECH two ways. Pick whichever you have on your machine.
+| Area | What's included |
+|------|-----------------|
+| **Projects** | List, create, edit, delete, show with associated issues |
+| **Issues** | List with AJAX-debounced search and filtering by status, priority and tag. Full CRUD with Form Request validation |
+| **Tags** | Create unique tags with a color; attach/detach to issues over AJAX, no page reload |
+| **Comments** | Paginated AJAX load (5/page); AJAX submit prepends the new comment and clears the form; inline 422 errors |
+| **Assignees** *(bonus)* | Many-to-many `issue_user` pivot, attached/detached via AJAX |
+| **Authorization** *(bonus)* | `ProjectPolicy` lets only a project's owner edit or delete it |
+| **Search** *(bonus)* | Debounced text search on title/description with AJAX result swap and URL state |
+| **Quick edit** | Status and priority badges on the issue page are inline AJAX dropdowns with optimistic UI |
 
 ---
 
-### Option A — Docker (recommended, zero local dependencies)
+## Architecture
+
+### Domain model
+
+| Entity   | Fields | Relationships |
+|----------|--------|---------------|
+| `Project` | `name`, `description`, `start_date`, `deadline` | has many `Issue` |
+| `Issue`   | `project_id`, `title`, `description`, `status`, `priority`, `due_date` | belongs to `Project`, has many `Comment`, many-to-many `Tag`, many-to-many `User` |
+| `Tag`     | `name` *(unique)*, `color` | many-to-many `Issue` |
+| `Comment` | `issue_id`, `author_name`, `body` | belongs to `Issue` |
+
+> The `start_date` and `deadline` columns ship in a **dedicated follow-up
+> migration** (`add_start_date_and_deadline_to_projects_table`) — exactly as
+> the task brief required.
+
+### Tech stack
+
+- **Laravel 13.x** (PHP 8.3) — resource controllers, Form Requests, Eloquent
+- **MySQL 8.4** — full FK constraints, cascading deletes on pivots
+- **Bootstrap 5.3** via CDN — no Vite build step
+- **Vanilla ES** + `fetch()` — no jQuery, no framework dependency
+- **Docker** (nginx + PHP-FPM + MySQL) — one-command spin-up
+
+---
+
+## Setup
+
+> Pick **one** option below. Docker is recommended because it requires no
+> local PHP or MySQL install.
+
+### Option A — Docker *(recommended)*
 
 #### Prerequisites
 
-- **Docker Desktop** (Windows/macOS) or **Docker Engine + Compose v2** (Linux).
-  Verify with:
+- **Docker Desktop** (Windows/macOS) or **Docker Engine + Compose v2** (Linux)
+
   ```bash
   docker --version
   docker compose version
   ```
-- Ports **8080** (web) and **3307** (MySQL) free on your host.
 
-#### Step 1 — Clone the repository
+- Ports `8080` (web) and `3307` (MySQL) free on your host
+
+#### Step 1 — Clone
 
 ```bash
-git clone <repo>
+git clone https://github.com/DionMirena/PRITECH.git
 cd PRITECH
 ```
 
-#### Step 2 — Build and start the stack
+#### Step 2 — Build and start
 
 ```bash
 docker compose up -d --build
 ```
 
-What this does:
-
-1. Builds the `pritech/app:latest` image from the `Dockerfile`:
-   - **Stage 1** (`vendor`) runs `composer install` to produce `vendor/`.
-   - **Stage 2** (`runtime`) is `php:8.3-fpm-alpine` with the required PHP
-     extensions (`pdo_mysql`, `bcmath`, `intl`, `opcache`, `zip`) plus a
-     custom `php.ini` and `opcache.ini`.
-2. Starts three containers wired together on a private Docker network:
-
-   | Service | Container       | Image                | Host port |
-   |---------|-----------------|----------------------|-----------|
-   | nginx   | `pritech-web`   | `nginx:1.27-alpine`  | `8080`    |
-   | PHP-FPM | `pritech-app`   | `pritech/app:latest` | – (internal `9000`) |
-   | MySQL 8 | `pritech-db`    | `mysql:8.4`          | `3307` → container `3306` |
-
-3. On first boot, `docker/entrypoint.sh` inside the app container:
-   - copies `.env.example` to `.env` if missing
-   - generates an `APP_KEY` if one isn't already set
-   - polls MySQL until it answers on port `3306`
-   - runs `php artisan migrate --force`
-   - runs `php artisan db:seed --force` (because `RUN_SEED=1` in
-     `compose.yaml`)
-   - caches config / routes / views
-   - launches `php-fpm`
-
-Total first-boot time: ~30–60 seconds while the DB warms up and the seeder
-runs. Watch progress with `docker compose logs -f app`.
-
 #### Step 3 — Open the app
 
-Visit **http://localhost:8080** in your browser.
+Visit **http://localhost:8080**.
 
-You should land on the projects index with the full seeded demo dataset:
+You'll land on `/projects` with the seeded dataset:
+
 - **10 named developers** (Alice Carter, Bob Hernandez, Sarah Chen, …)
 - **7 projects** (Customer Portal Redesign, Mobile App v2, Public REST API, …)
-- **~50 realistic issues** + **~200 comments** + **10 colored tags**
+- **~50 realistic issues**, **~200 comments**, **10 colored tags**
 
-#### Step 4 — Verify everything is healthy
+#### Step 4 — Verify
 
 ```bash
 docker compose ps
 ```
 
-You should see three containers, all `Up`, with `pritech-db` reporting
-`(healthy)`.
+Expect three `Up` containers with `pritech-db` reporting `(healthy)`.
 
----
+<details>
+<summary><strong>What's actually happening on first boot?</strong></summary>
 
-### Docker — day-to-day commands
+1. **Build** the `pritech/app:latest` image from the `Dockerfile`:
+   - Stage 1 (`vendor`) — `composer install` produces `vendor/`
+   - Stage 2 (`runtime`) — `php:8.3-fpm-alpine` with `pdo_mysql`, `bcmath`,
+     `intl`, `opcache`, `zip`, plus a custom `php.ini` and `opcache.ini`
+2. **Start** three containers on a private Docker network:
+
+   | Service | Container       | Image                | Host port |
+   |---------|-----------------|----------------------|-----------|
+   | nginx   | `pritech-web`   | `nginx:1.27-alpine`  | `8080`    |
+   | PHP-FPM | `pritech-app`   | `pritech/app:latest` | – (internal `9000`) |
+   | MySQL 8 | `pritech-db`    | `mysql:8.4`          | `3307 → 3306` |
+
+3. **Bootstrap** via `docker/entrypoint.sh`:
+   - Copies `.env.example` → `.env` if missing
+   - Generates `APP_KEY` if not already set
+   - Polls MySQL until reachable
+   - Runs `php artisan migrate --force`
+   - Runs `php artisan db:seed --force` *(controlled by `RUN_SEED=1`)*
+   - Caches config / routes / views
+   - Launches `php-fpm`
+
+Total first-boot time: ~30–60 seconds. Tail progress with
+`docker compose logs -f app`.
+
+</details>
+
+<details>
+<summary><strong>Day-to-day commands</strong></summary>
 
 ```bash
-# --- lifecycle ---
-docker compose up -d                 # start (uses existing images)
-docker compose up -d --build         # rebuild app image, then start
-docker compose stop                  # stop containers, keep volumes
-docker compose down                  # stop and remove containers
-docker compose down -v               # stop, remove containers AND wipe MySQL data
-docker compose restart               # restart all
-docker compose restart app           # restart just PHP
+# Lifecycle
+docker compose up -d                  # start (existing images)
+docker compose up -d --build          # rebuild app image, then start
+docker compose stop                   # stop containers, keep volumes
+docker compose down                   # stop and remove containers
+docker compose down -v                # ALSO wipe MySQL data
+docker compose restart                # restart all
+docker compose restart app            # restart just PHP
 
-# --- visibility ---
-docker compose ps                    # what's running
-docker compose logs -f               # tail all logs
-docker compose logs -f app           # tail just PHP
-docker compose logs -f web           # tail just nginx
-docker compose logs -f db            # tail just MySQL
+# Visibility
+docker compose ps                     # what's running
+docker compose logs -f                # tail all logs
+docker compose logs -f app            # tail just PHP
 
-# --- run artisan inside the container ---
+# Artisan inside the container
 docker compose exec app php artisan tinker
 docker compose exec app php artisan route:list
-docker compose exec app php artisan migrate:fresh --seed   # reset to fresh demo data
-docker compose exec app php artisan config:clear
-docker compose exec app sh                                  # interactive shell
+docker compose exec app php artisan migrate:fresh --seed
+docker compose exec app sh            # interactive shell
 
-# --- talk to MySQL from your host ---
+# Connect to MySQL from your host
 mysql -h 127.0.0.1 -P 3307 -u pritech -psecret pritech
 ```
 
-### When do you need to rebuild?
+</details>
 
-| Changed file(s)                            | What to run                          |
-|--------------------------------------------|--------------------------------------|
-| `public/css/app.css`, `public/js/app.js`   | Just refresh the browser (bind-mounted) |
-| `resources/views/**`                       | Live — refresh the browser           |
-| `app/**`, `routes/**`, `database/**`, `composer.json` | `docker compose up -d --build`       |
-| `compose.yaml`                             | `docker compose up -d`               |
-| `Dockerfile`, `docker/**`                  | `docker compose up -d --build`       |
+<details>
+<summary><strong>When do you need to rebuild?</strong></summary>
 
-### Troubleshooting
+| Changed file(s) | What to run |
+|---|---|
+| `public/css/app.css`, `public/js/app.js` | Refresh the browser *(bind-mounted)* |
+| `resources/views/**` | Refresh the browser *(live)* |
+| `app/**`, `routes/**`, `database/**`, `composer.json` | `docker compose up -d --build` |
+| `compose.yaml` | `docker compose up -d` |
+| `Dockerfile`, `docker/**` | `docker compose up -d --build` |
 
-- **Port already in use** — change `"8080:80"` (or `"3307:3306"`) in
-  `compose.yaml` to a free port and `docker compose up -d` again.
-- **`Connection refused` from app to db** — the entrypoint waits up to 30s.
-  If the DB is slow on your machine, run `docker compose restart app` once
-  the DB is up.
-- **Want to reset everything** — `docker compose down -v && docker compose up -d --build`
-  destroys the MySQL volume and re-seeds from scratch.
+</details>
+
+<details>
+<summary><strong>Troubleshooting</strong></summary>
+
+- **Port already in use** — change `"8080:80"` or `"3307:3306"` in
+  `compose.yaml` to a free port, then `docker compose up -d`.
+- **`Connection refused` from app to db** — the entrypoint waits up to 30 s.
+  If the DB is slow, `docker compose restart app` after it boots.
+- **Reset everything** — `docker compose down -v && docker compose up -d --build`
+  destroys the volume and re-seeds from scratch.
 - **Permission errors on `storage/`** — the image already chowns it to
-  `www-data`. If you mounted the host directory by mistake, remove that
-  mount from `compose.yaml`.
+  `www-data`. If you added a host bind-mount, remove it from `compose.yaml`.
 
----
+</details>
 
-### Option B — Run locally with Laragon / native PHP
+### Option B — Local PHP / Laragon
 
 #### Prerequisites
+
 - PHP 8.3+
 - Composer
 - MySQL (Laragon ships it) or SQLite
@@ -183,81 +225,107 @@ mysql -h 127.0.0.1 -P 3307 -u pritech -psecret pritech
 #### Steps
 
 ```bash
-git clone <repo>
+git clone https://github.com/DionMirena/PRITECH.git
 cd PRITECH
 composer install
 cp .env.example .env
 php artisan key:generate
 
-# MySQL: create the database first, e.g.
+# MySQL — create the database first
 mysql -uroot -e "CREATE DATABASE pritech CHARACTER SET utf8mb4;"
-# or swap DB_CONNECTION=sqlite in .env
+# or switch DB_CONNECTION=sqlite in .env
 
 php artisan migrate --seed
 php artisan serve
 ```
 
-Then visit `http://127.0.0.1:8000`.
+Visit **http://127.0.0.1:8000**.
 
-### Seeded data
+---
 
-The seeder creates:
+## Routes
 
-- 5 users (including `alice@pritech.test` and `bob@pritech.test`)
-- 5 projects with random owners
-- ~30 issues distributed across them
-- 7 colored tags
-- A few comments per issue, with random assignees
+| Method   | URI                                   | Purpose |
+|----------|---------------------------------------|---------|
+| `GET`    | `/projects`                           | List projects |
+| `GET`    | `/projects/{project}`                 | Project detail with its issues |
+| `GET`    | `/issues?status=&priority=&tag=&q=`   | Issue index (HTML, or JSON for AJAX) |
+| `GET`    | `/issues/{issue}`                     | Issue detail (tags, assignees, comments) |
+| `POST`   | `/issues/{issue}/tags`                | AJAX attach tag |
+| `DELETE` | `/issues/{issue}/tags/{tag}`          | AJAX detach tag |
+| `GET`    | `/issues/{issue}/comments?page=N`     | AJAX paginated comments |
+| `POST`   | `/issues/{issue}/comments`            | AJAX add comment (validated) |
+| `POST`   | `/issues/{issue}/assignees`           | AJAX assign user |
+| `DELETE` | `/issues/{issue}/assignees/{user}`    | AJAX unassign |
+| `PATCH`  | `/issues/{issue}/status`              | AJAX inline status/priority update |
+| `GET`    | `/tags`                               | List + create tags |
 
-## Routes overview
+Full list at runtime:
+```bash
+docker compose exec app php artisan route:list
+```
 
-| Method | URI | Purpose |
-|--------|-----|---------|
-| `GET`  | `/projects` | List projects |
-| `GET`  | `/projects/{project}` | Project detail w/ its issues |
-| `GET`  | `/issues?status=&priority=&tag=&q=` | Issue index (HTML or JSON for AJAX) |
-| `GET`  | `/issues/{issue}` | Issue detail (tags, assignees, comments) |
-| `POST` | `/issues/{issue}/tags` | AJAX attach tag |
-| `DELETE` | `/issues/{issue}/tags/{tag}` | AJAX detach tag |
-| `GET`  | `/issues/{issue}/comments?page=N` | AJAX paginated comments |
-| `POST` | `/issues/{issue}/comments` | AJAX add comment (validated) |
-| `POST` | `/issues/{issue}/assignees` | AJAX assign user |
-| `DELETE` | `/issues/{issue}/assignees/{user}` | AJAX unassign |
-| `GET`  | `/tags` | List + create tags |
+---
 
 ## Project structure
 
-```
+```text
 app/
-  Http/
-    Controllers/   ProjectController, IssueController, TagController,
-                   CommentController, IssueTagController, IssueAssigneeController
-    Requests/      Store/Update FormRequests for every resource
-  Models/          Project, Issue, Tag, Comment, User
-  Policies/        ProjectPolicy
+├── Http/
+│   ├── Controllers/    ProjectController, IssueController, TagController,
+│   │                   CommentController, IssueTagController, IssueAssigneeController
+│   └── Requests/       Store/Update Form Requests for every resource
+├── Models/             Project, Issue, Tag, Comment, User
+├── Policies/           ProjectPolicy
+└── Providers/          AppServiceProvider (Paginator::useBootstrapFive)
+
 database/
-  migrations/      One migration per table + a dedicated one for start_date/deadline
-  factories/       Project/Issue/Tag/Comment factories
-  seeders/         DatabaseSeeder builds a realistic demo dataset
-resources/
-  views/
-    layouts/app.blade.php
-    partials/
-    projects/  (index, create, edit, show, _form)
-    issues/    (index, create, edit, show, _form, _table, _comment)
-    tags/      (index)
+├── migrations/         One migration per table + a dedicated one for start_date/deadline
+├── factories/          Project/Issue/Tag/Comment factories with curated English content
+└── seeders/            DatabaseSeeder builds the demo dataset
+
+resources/views/
+├── layouts/app.blade.php
+├── partials/           nav, errors
+├── projects/           index, create, edit, show, _form
+├── issues/             index, create, edit, show, _form, _table, _comment
+└── tags/               index
+
 public/
-  css/app.css    – design system
-  js/app.js      – AJAX modules (tags, assignees, comments, filters)
-routes/web.php
+├── css/app.css         Design system on top of Bootstrap
+└── js/app.js           AJAX modules (tags, assignees, comments, filters, quick-edit)
+
+docker/
+├── entrypoint.sh
+├── nginx/default.conf
+└── php/                php.ini, opcache.ini
+
+routes/web.php          Route::resource + nested AJAX routes
 ```
+
+---
 
 ## Notes for reviewers
 
-- Eager loading is used everywhere a list renders (`with('owner')`, `with('project', 'tags')`, etc.) to keep query counts flat — no N+1.
-- All write endpoints use Form Request classes; client-side errors come back as `422` JSON for AJAX and as flashed errors for full-page submits.
-- Issue filters share one endpoint (`IssueController@index`) — when called with `XMLHttpRequest`, it returns rendered partials + pagination HTML; otherwise it returns the full page. This keeps the view template DRY.
-- All AJAX POST/DELETE requests use the CSRF token from the `<meta name="csrf-token">` tag.
-#   P R I T E C H  
- #   P R I T E C H  
- 
+- **No N+1.** Every list query eager-loads what the view will render
+  (`with('owner:id,name')`, `with(['project:id,name', 'tags:id,name,color'])`, etc.).
+- **Form Requests everywhere.** All write endpoints validate via dedicated
+  Form Request classes. AJAX endpoints get **422 JSON** with field-keyed
+  errors; full-page submits get **flashed errors** displayed inline.
+- **One endpoint, two delivery modes.** `IssueController@index` returns the
+  full Blade page for regular requests and rendered partial + pagination HTML
+  for `XMLHttpRequest` calls — same template, no duplicated logic.
+- **CSRF everywhere.** Every AJAX POST/PATCH/DELETE reads the CSRF token
+  from the `<meta name="csrf-token">` tag and forwards it as `X-CSRF-TOKEN`.
+- **Constants over magic strings.** `Issue::STATUSES` / `PRIORITIES` are the
+  single source of truth for the migration's `enum()`, the FormRequest's
+  `Rule::in(...)`, and the Blade dropdowns.
+- **Optimistic UI with rollback** on the inline status/priority dropdowns —
+  the badge updates immediately on click and rolls back if the server rejects.
+
+---
+
+## License
+
+[MIT](LICENSE) — feel free to use this as a reference for your own Laravel
+work.
